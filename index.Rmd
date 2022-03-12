@@ -225,12 +225,119 @@ bibliography: bibliography.bib
 
 # Введение в `lingglosses`
 
+```{r, include=FALSE}
+library(lingglosses)
+# in order to have the same list of glosses through the whole document
+options("lingglosses.refresh_glosses_list" = FALSE)
+```
+
+`lingglosses` --- это пакет на R (смотрите подробную инструкцию [здесь](https://agricolamz.github.io/lingglosses/)), который я написал для того, чтобы оформлять глоссированные примеры в нашем [типологическом атласе языков Дагестана](http://lingconlab.ru/dagatlas/). Но так как это плохой повод, я так же провел короткое исследование и нашел вот такой список глосс:
+
+```
+NOM = nominative, GEN = nominative, DAT = nominative, ACC = accusative, VOC = accusative, LOC = accusative, INS = accusative, PL = plural, SG = singular
+```
+
+Кроме очевидных проблем, в этом списке глосс есть еще некоторые:
+
+* отсутсвие алфавитного порядка;
+* в нем отсутствуют две глоссы, которые есть в тексте статьи (`r add_gloss("SBJV")`, `r add_gloss("IMP")`).
+
+Так что основная цели `lingglosses`:
+
+* сделать глоссированные примеры для `.html` варианта `rmarkdown`;
+* полу-автоматически собирать список глосс.
+
 ## Установка
 
 Как и все пакеты `lingglosses` можно установить из CRAN:
 
 ```{r, eval = FALSE}
 install.packages("lingglosses")
+```
+
+## Глоссированные примеры с `gloss_example()`
+
+Во-первых, библиотеку нужно включить:
+
+```{r}
+library(lingglosses)
+```
+
+Основная функция это `gloss_example()`
+
+```{r}
+gloss_example(transliteration = "bur-e-**ri** c'in-ne-sːu",
+              glosses = "fly-NPST-**INF** know-HAB-NEG",
+              free_translation = "I cannot fly. (Zilo Andi, East Caucasian)",
+              comment = "(lit. do not know how to)",
+              annotation = "Бурери цIиннессу.")
+```
+
+Названия аргументов должны быть самоочевидны, к тому же, если вы помните их порядок можно не писать их имена:
+
+```{r}
+gloss_example("bur-e-**ri** c'in-ne-sːu",
+              "fly-NPST-**INF** know-HAB-NEG",
+              "I cannot fly. (Zilo Andi, East Caucasian)",
+              "(lit. do not know how to)",
+              "Бурери цIиннессу.")
+```
+
+Иногда некоторые люди глоссируют полисинтетические морфемы как отдельные слова:
+
+(@) Абазинский, абхазо-адыгские [@arkadiev20: example 5.2]
+```{r}
+gloss_example("s- z- á- la- nəq'wa -wa -dzə -j -ɕa -t'",
+              "1SG.ABS POT 3SG.N.IO LOC pass IPF LOC 3SG.M.IO seem(AOR) DCL",
+              "It seemed to him that I would be able to pass there.")
+```
+
+Алгоритм извлечения глосс в пакете `lingglosses` чувствителен к регистру, так что если вы считаете, что что-то не должно восприниматься как глосса, оберните это в квадратные скобки:
+
+(@) Kvankhidatli Andi, [@verhees19: 203]
+```{r}
+gloss_example("den=no he.ʃː-qi hartʃ'on-k'o w-uʁi w-uk'o.",
+              "{I}=ADD DEM.M-INS watch-CVB M-stand.AOR M-be.AOR",
+              "And I stood there, watching him.")
+```
+
+Иногда примеры слишком длинные, и не влезают на страницу. В таком случае следует использовать аргуемнт `{r, results='asis'}` в чанке кода, тогда все разобьется на кусочки
+
+(@tsa_ex) Мишлешский диалект цахурского, нахско-дагестанские [@maisak07: 386]
+```{r, results='asis'}
+gloss_example('za-s jaːluʁ **wo-b** **qa-b-ɨ**; turs-ubɨ qal-es-di ǯiqj-eː jaːluʁ-**o-b** **qa-b-ɨ**', 
+               '1SG.OBL-DAT shawl.3 AUX-3 PRF-3-bring.PFV woolen_sock-PL NPL.bring-PL-A.OBL place-IN shawl.3-AUX-3 PRF-3-bring.PFV',
+               '(they) **brought** me a shawl; instead of (lit. in place of bringing) woolen socks, (they) **brought** a shawl.',
+               '(Woolen socks are considered to be more valuable than a shawl.)')
+```
+
+В функции прописан аргумент по умолчанию `line_length`, который равен `70`, так что если вы не удовлетворены результатом, поменяйте это число.
+
+## Список глосс с `make_gloss_list()`
+
+Когда вы закончили текст, можно вызвать функцию `make_gloss_list()` и она сделает список глосс:
+
+```{r}
+make_gloss_list()
+```
+
+Эта функция основана на датасете `glosses_df`, который я составил на основе лейпцигских глосс, [страницы в Википедии](https://en.wikipedia.org/wiki/List_of_glossing_abbreviations) и откытого журнала [Glossa](https://www.glossa-journal.org/). Все могут скачать и что-нибудь изменить в моем датасете. Вот его кусочек:
+
+```{r}
+set.seed(42)
+glosses_df[sample(1:nrow(glosses_df), 5),]
+```
+
+Вообще, алгоритм написан таким образом, что он подсвечивает проблемные глоссы. Давайте добавим в список глоссу `r add_gloss("FAKE")` и вызовем функцию `make_gloss_list()` (сами не пытайтесь несколько раз вызывать эту функцию в одном документе --- для этого нужна одна хитрость).
+
+```{r}
+make_gloss_list()
+```
+
+Также можно посмотреть все возможные варианты для некоторых глосс, дубликаты тоже подсветятся: 
+
+```{r}
+make_gloss_list(all_possible_variants = TRUE)
 ```
 
 
