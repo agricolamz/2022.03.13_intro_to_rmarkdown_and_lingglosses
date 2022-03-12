@@ -13,8 +13,5 @@ summary(iris)
 И строить графики
 
 ```{r}
-library(tidyverse)
-iris %>% 
-  ggplot(aes(Sepal.Length, Sepal.Width))+
-  geom_point()
+plot(iris$Sepal.Length, iris$Sepal.Width)
 ```
